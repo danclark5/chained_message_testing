@@ -124,7 +124,10 @@ class TestGame < Minitest::Test
 end
 ```
 
-This case is slightly different as we don't have an equivalent to the `receive_chained_message` method
+This case is slightly different as we don't have an equivalent to the `receive_chained_message` method. In order to do
+something similar we need to create two stubs. The first uses the `@game_fairy dummy and is where we stub out the
+proclamation method. The second is where we stub out the `get_fairy` method on `GameFairyGateway`. Note that these are
+different ways to do the same thing.
 
 # Running the tests
 
