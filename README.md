@@ -6,13 +6,13 @@ Anyway, I ran into a problem. How do you stub a method that's on a chain?
 
 For example, `car.get_in.buckle_up_buckaroo!`
 
-# First, a note about doubles, stubs, dummies, mocks, spies, fakes, centurions, etc!
+# First, a note about doubles, stubs, dummies, mocks, spies, fakes, monkey patching, centurions, etc!
 
-I was kidding about centurions. Those don't exist...yet. However, the others do, and they caused me grief. What's the difference? Why would I use one over the other.
+I was kidding about centurions. Those don't exist...yet. However, the others do, and they caused me grief. What's the difference? Why would I use one over the other?
 
 Now I may update this as I learn more, but there aren't that many differences. Different frameworks have come up with different names for what they needed. That said, defining each one deserves it's own post. However, for the purposes of this post I'm going to use the definitions in [the post by Ilija Eftimov](https://ieftimov.com/post/test-doubles-theory-minitest-rspec/).
 
-#The problem
+# The problem
 
 I have something I want to test, but it depends on something else. Normally, I'd just stub the needed thing and move on, but what if that thing is owned by another thing. To make matters worse the application is spaghetti code heaven, and I can't trace where things are to do a proper stub? For me I'd rather stub the message chain.
 
@@ -56,7 +56,7 @@ class Game
 end
 ```
 
-Here we have a `Game`, `GameFairyGateway`, and a `GameFairy`. They `GameFairy` is a mysterious resource that we can't understand. How it works is beyond human comprehension. However, it tells us the state of the game (i.e. is the game done), but we fear asking it questions directly. To help us here we've added a `GameFairyGateway` to be our messager for the `GameFairy`'s divine messages.
+Here we have a `Game`, `GameFairyGateway`, and a `GameFairy`. The `GameFairy` is a mysterious resource that we can't understand. How it works is beyond human comprehension. However, it tells us the state of the game (i.e. is the game done), but we fear asking it questions directly. To help us here we've added a `GameFairyGateway` to be our messager for the `GameFairy`'s divine messages.
 
 The problem is that we want to test the game, but let's say we can't efficiently stub the supernatural nature of the `GameFairy` How do we do it? 
 
@@ -86,7 +86,7 @@ describe Game do
 end
 ```
 
-Here we are using receive_message_chain to allow us to base the stub on `GameFairyGateway` even though we are stubbing the `proclamation` method on `GameFairy`. Note that this is really only for legacy code that you're looking to refactor later but can't. Please refer to [rspec's documentation for more information](https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/message-chains).
+Here we are using 'receive_message_chain' to allow us to base the stub on `GameFairyGateway` even though we are stubbing the `proclamation` method on `GameFairy`. Note that this is really only for legacy code that you're looking to refactor later but for now you can't. Please refer to [rspec's documentation for more information](https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/message-chains).
 
 # minitest's solution.
 
@@ -129,10 +129,13 @@ something similar we need to create two stubs. The first uses the `@game_fairy d
 proclamation method. The second is where we stub out the `get_fairy` method on `GameFairyGateway`. Note that these are
 different ways to do the same thing.
 
+You'd be correct in pointing out that we are stubbing out the thing that we "weren't able to understand". Unfortunately,
+we don't have another option, so we will have to use a dummy to represent the great power of the GameFairy.
+
 # Running the tests
 
 Running the code here is pretty easy. The code can be found on my [github
-profile](https://github.com/danclark5/chained_message_testing). Run `git clone` the repo and ensure you have ruby,
+profile](https://github.com/danclark5/chained_message_testing). Run `git clone` to get the repo and ensure you have ruby,
 minitest, and rspec installed.
 
 From there run the rspec suite with:
