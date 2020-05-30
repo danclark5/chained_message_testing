@@ -63,7 +63,7 @@ The problem is that we want to test the game, but let's say we can't efficiently
 # rspec's `receive_message_chain`
 
 ```ruby
-require './game'
+require_relative '../game'
 
 describe Game do
   subject(:game) { Game.new() }
@@ -71,14 +71,14 @@ describe Game do
 
     context 'the game fairy says there is a tie' do
       it 'returns false' do
-        allow(GameFairyGateway).to receive_message_chain("get_fairy.proclamation") { false }
+        allow(GameFairyGateway).to receive_message_chain(:get_fairy, :proclamation) { false }
         expect(game.done?).to be false 
       end
     end
 
     context 'the game fairy says the player_1 is the winner' do
       it 'returns true' do
-        allow(GameFairyGateway).to receive_message_chain("get_fairy.proclamation") { true }
+        allow(GameFairyGateway).to receive_message_chain(:get_fairy, :proclamation) { true }
         expect(game.done?).to be true 
       end
     end
@@ -89,3 +89,63 @@ end
 Here we are using receive_message_chain to allow us to base the stub on `GameFairyGateway` even though we are stubbing the `proclamation` method on `GameFairy`. Note that this is really only for legacy code that you're looking to refactor later but can't. Please refer to [rspec's documentation for more information](https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/message-chains).
 
 # minitest's solution.
+
+```ruby
+require "minitest/autorun"
+require_relative '../game'
+
+class TestGame < Minitest::Test
+  def setup
+    @game = Game.new
+    @game_fairy = Object.new
+  end
+
+  def test_that_game_is_not_done
+
+    def @game_fairy.proclamation
+      false
+    end
+
+    GameFairyGateway.stub :get_fairy, @game_fairy do
+      assert_equal false, @game.done? 
+    end
+  end
+
+  def test_that_game_is_done
+
+    def @game_fairy.proclamation
+      true 
+    end
+
+    GameFairyGateway.stub :get_fairy, @game_fairy do
+      assert_equal true, @game.done? 
+    end
+  end
+end
+```
+
+This case is slightly different as we don't have an equivalent to the `receive_chained_message` method
+
+# Running the tests
+
+Running the code here is pretty easy. The code can be found on my [github
+profile](https://github.com/danclark5/chained_message_testing). Run `git clone` the repo and ensure you have ruby,
+minitest, and rspec installed.
+
+From there run the rspec suite with:
+
+```bash
+rspec rspec/game_spec.rb
+```
+
+The minitest suite with:
+
+```bash
+ruby minitest/test_game.rb
+```
+
+# Conclusion
+
+`receive_message_chain` is not a method that should be used in new code. It's a code smell that indicates unnecessary
+complexity. minitest does not have an equivalent to it, but be wary of needing to stub out too many things in your unit
+tests. More is not always better.
